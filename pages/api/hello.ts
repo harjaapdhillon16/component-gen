@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from "next"
 import OpenAI from "openai"
 
 const openai = new OpenAI({
-  apiKey: "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",
+  apiKey: process.env.OPENAIKEY,
 })
 
 type ResponseData = {

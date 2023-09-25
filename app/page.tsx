@@ -32,40 +32,42 @@ export default function IndexPage() {
     const sanitizedCode = data?.message
       ?.replace("```jsx", "")
       .replace("```", "")
-    runCodeInIframe(sanitizedCode)
+    runCode(sanitizedCode)
     setGeneratedCode(sanitizedCode)
     setLoading(false)
   }, [input])
 
-  const runCodeInIframe = (code: string) => {
+  const runCode = (code: string) => {
     console.log("code run happned")
     const iframe = iframeRef.current
     if (iframe) {
       const doc = (iframe as any).contentDocument
+      ;(iframe as any).setAttribute("type", "module")
 
-      // Load React and ReactDOM from CDNs
+      // Prepare the scripts
       const reactScript = document.createElement("script")
       reactScript.src = "https://unpkg.com/react@17/umd/react.development.js"
-      doc.body.appendChild(reactScript)
 
       const reactDOMScript = document.createElement("script")
       reactDOMScript.src =
         "https://unpkg.com/react-dom@17/umd/react-dom.development.js"
-      doc.body.appendChild(reactDOMScript)
 
+      // When React and ReactDOM scripts are loaded, inject the user's code
       reactDOMScript.onload = () => {
         const script = document.createElement("script")
 
-        // Convert ES6 imports to UMD/global references in the `code`
-        // For instance, replace `import React from 'react'` with a global `React`
-        // This example assumes no such imports; modify as needed.
-
+        // Assume the main component the user creates is named 'App'
+        // and try to render it to the body of the iframe
         script.textContent = `
-          ${code.replace("import React from 'react';", "")}
+          ${code}
           ReactDOM.render(React.createElement(App), document.body);
         `
         doc.body.appendChild(script)
       }
+
+      // Append the React and ReactDOM scripts
+      doc.body.appendChild(reactScript)
+      doc.body.appendChild(reactDOMScript)
     }
   }
 
@@ -90,22 +92,25 @@ export default function IndexPage() {
           {loading ? "Generating" : "Generate"}
         </Button>
       </div>
-      {Boolean(generatedCode) && (
-        <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-          <CodeBox code={generatedCode} />
-          <div>
-            <iframe
-              ref={iframeRef}
-              style={{
-                width: "100%",
-                height: "100%",
-                borderRadius: 5,
-                border: "1px solid black",
-              }}
-            />
+      <div
+        className={`grid grid-cols-1 gap-2 md:grid-cols-2 ${
+          Boolean(generatedCode) ? "" : "hidden"
+        }`}
+      >
+        <CodeBox code={generatedCode} />
+        <div>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              height: "100%",
+              justifyContent: "center",
+            }}
+          >
+            VM CODE TO RUN OUR CODE
           </div>
         </div>
-      )}
+      </div>
     </section>
   )
 }
